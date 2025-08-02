@@ -236,7 +236,7 @@ The system handles 16 real-time video feeds-a mix of H.264 and H.265 MPEG stream
 
 Even though Gemma 3n is designed to run on resource-constrained devices, it’s not feasible in our setup to directly process 320 fps. In reality, most of the time, video streams are static. That’s why YOLO-NAS is used as a lightweight prefilter (part of Frigate), triggering short video clips only when motion and objects are detected.
 
-Each event results in 10 frames extracted and sent to Gemma 3n for analysis. We profiled Gemma 3n using PyTorch Profiler, measuring ~483 ms per frame-around 2 fps-confirming the need for such prefiltering. We’ve shared the raw results and profiling code in a separate repository here.
+Each event results in 10 frames extracted and sent to Gemma 3n for analysis. We profiled Gemma 3n using PyTorch Profiler, measuring ~483 ms per frame-around 2 fps-confirming the need for such prefiltering. We’ve shared the raw results and profiling code in a separate [gemma3n-profiling](https://github.com/sbnb-io/gemma3n-profiling.git) repository.
 
 As a high-level monitoring tool, we connected the system to Grafana Cloud using the pre-installed Grafana Agent from Sbnb Linux. Here is a snapshot of GPU utilization over two days:
 
