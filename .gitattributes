@@ -18,3 +18,4 @@ media/ai-pc.jpg filter=lfs diff=lfs merge=lfs -text
 media/alien-snapshot-640.jpg filter=lfs diff=lfs merge=lfs -text
 media/black_mirror.jpg filter=lfs diff=lfs merge=lfs -text
 media/car-640.jpg filter=lfs diff=lfs merge=lfs -text
+media/json-llm.jpg filter=lfs diff=lfs merge=lfs -text
