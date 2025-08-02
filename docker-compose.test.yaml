@@ -1,0 +1,24 @@
+services:
+  # Test Service - Completely isolated
+  run_tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sunny-osprey-run-tests
+    environment:
+      - PYTHONUNBUFFERED=1
+      - HF_TOKEN=${HF_TOKEN}
+    volumes:
+      - ~/.cache/huggingface:/root/.cache/huggingface
+      - ./tests:/app/tests:ro
+      - ./tests/data:/app/test_videos:ro
+      - ./pytest.ini:/app/pytest.ini:ro
+    entrypoint: []
+    command: ["/venv/bin/python", "-m", "pytest", "tests/"]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: -1
+              capabilities: [gpu] 

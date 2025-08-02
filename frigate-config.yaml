@@ -1,0 +1,49 @@
+record:
+  enabled: true
+
+detect:
+  enabled: true
+
+detectors:
+  onnx:
+    type: onnx
+
+model:
+  model_type: yolonas
+  width: 320
+  height: 320
+  input_pixel_format: bgr
+  input_tensor: nchw
+  path: /config/yolo_nas_s.onnx
+
+objects:
+  track:
+    - person
+    - car
+    - dog
+    - cat
+
+mqtt:
+  enabled: true
+  host: mqtt
+  port: 1883
+
+ffmpeg:
+  hwaccel_args: preset-nvidia-h264
+  output_args:
+    record: preset-record-generic
+  input_args: preset-rtsp-restream
+
+cameras:
+  CAM1: # <------ Name the camera
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://admin:your_password_here@10.0.0.1:554/1 # <----- The stream you want to use for detection
+          roles:
+            - detect
+        - path: rtsp://admin:your_password_here@10.0.0.1:554/0 # <----- The stream you want to use for record
+          roles:
+            - record
+
+version: 0.16-0

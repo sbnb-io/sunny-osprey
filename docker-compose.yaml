@@ -1,0 +1,114 @@
+services:
+  # MQTT Broker
+  mqtt:
+    image: eclipse-mosquitto:latest
+    container_name: sunny-osprey-mqtt
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+    networks:
+      - sunny-osprey-network
+    restart: unless-stopped
+
+  # Sunny Osprey Main Service
+  sunny-osprey:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sunny-osprey
+    environment:
+      - MQTT_HOST=mqtt
+      - MQTT_PORT=1883
+      - FRIGATE_HOST=frigate
+      - FRIGATE_PORT=8971
+      - HF_TOKEN=${HF_TOKEN}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - CHAT_ID=${CHAT_ID}
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ~/.cache/huggingface:/root/.cache/huggingface
+      - ./tests/data:/app/test_videos:ro
+      - sunnyosprey_ready:/shared
+      - ./prompt.txt:/app/prompt.txt:ro
+      - ./system_prompt.txt:/app/system_prompt.txt:ro
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: -1
+              capabilities: [gpu]
+    depends_on:
+      - mqtt
+    networks:
+      - sunny-osprey-network
+    restart: unless-stopped
+    healthcheck:
+      # Check for readiness file every 2 seconds for quick detection of fast startups
+      # 300 retries × 2s interval = 10 minutes total for slow startups (model downloads)
+      # First startup may take longer due to VLM model downloads from Hugging Face
+      test: ["CMD", "test", "-f", "/shared/ready"]
+      interval: 2s
+      timeout: 1s
+      retries: 300
+
+  # Test Events Injector Service
+  test-injector:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sunny-osprey-test-injector
+    environment:
+      - MQTT_HOST=mqtt
+      - MQTT_PORT=1883
+    volumes:
+      - ~/.cache/huggingface:/root/.cache/huggingface
+      - ./tests/data:/app/test_videos:ro
+      - sunnyosprey_ready:/shared
+    command: ["/app/inject_test_events.sh"]
+    depends_on:
+      mqtt:
+        condition: service_started
+      sunny-osprey:
+        condition: service_healthy
+    networks:
+      - sunny-osprey-network
+    profiles:
+      - inject_test_events
+
+  # Optional: Frigate (if you want to run a local instance for testing)
+  frigate:
+    image: ghcr.io/blakeblackshear/frigate:stable
+    container_name: sunny-osprey-frigate
+    shm_size: "64mb"
+    ports:
+      - "8971:8971"
+    volumes:
+      - ./frigate-config.yaml:/config/config.yaml:ro
+      - ./misc/yolo_nas_s.onnx:/config/yolo_nas_s.onnx:ro
+      - /etc/localtime:/etc/localtime:ro
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: -1
+              capabilities: [gpu]
+    networks:
+      - sunny-osprey-network
+    profiles:
+      - frigate
+
+
+
+networks:
+  sunny-osprey-network:
+
+volumes:
+  sunnyosprey_ready:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
