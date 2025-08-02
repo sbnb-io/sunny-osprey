@@ -75,7 +75,7 @@ identifies suspicious versus normal activity.
 
 ![](media/alien-snapshot-640.jpg)
 
-[Raw video clip](https://github.com/aospan/sunny_osprey/raw/c0195d1968ca77a9ab299dcd25d945065ed4c3f7/tests/data/alien.mp4)
+[Raw video clip](https://github.com/sbnb-io/sunny-osprey/raw/refs/heads/main/tests/data/alien.mp4)
 
 **Gemma 3n raw output:**
 ```
@@ -94,7 +94,7 @@ identifies suspicious versus normal activity.
 
 ![](media/package-snapshot-640.jpg)
 
-[Raw video clip](https://github.com/aospan/sunny_osprey/raw/refs/heads/main/tests/data/package.mp4)
+[Raw video clip](https://github.com/sbnb-io/sunny-osprey/raw/refs/heads/main/tests/data/package.mp4)
 
 **Gemma 3n raw output:**
 ```
@@ -117,7 +117,7 @@ This experiment was inspired by a Black Mirror episode where Cameron uses signs 
 
 ![](media/classify-sign-640.jpg)
 
-[Raw video clip](https://github.com/aospan/sunny_osprey/raw/refs/heads/main/tests/data/classify-video-sign.mp4)
+[Raw video clip](https://github.com/sbnb-io/sunny-osprey/raw/refs/heads/main/tests/data/classify-video-sign.mp4)
 
 **Gemma 3n raw output:**
 ```
@@ -137,7 +137,7 @@ This experiment was inspired by a Black Mirror episode where Cameron uses signs 
 
 ![](media/car-640.jpg)
 
-[Raw video clip](https://github.com/aospan/sunny_osprey/raw/refs/heads/main/tests/data/hyundai.mp4)
+[Raw video clip](https://github.com/sbnb-io/sunny-osprey/raw/refs/heads/main/tests/data/hyundai.mp4)
 
 **Gemma 3n raw output:**
 ```
@@ -155,7 +155,7 @@ This experiment was inspired by a Black Mirror episode where Cameron uses signs 
 
 ![](media/person-fall-incident.png)
 
-[Raw video clip](https://github.com/aospan/sunny_osprey/raw/refs/heads/main/tests/data/person-fall.mp4)
+[Raw video clip](https://github.com/sbnb-io/sunny-osprey/raw/refs/heads/main/tests/data/person-fall.mp4)
 
 **Gemma 3n raw output:**
 
