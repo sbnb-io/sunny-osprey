@@ -240,7 +240,7 @@ Each event results in 10 frames extracted and sent to Gemma 3n for analysis. We 
 
 As a high-level monitoring tool, we connected the system to Grafana Cloud using the pre-installed Grafana Agent from Sbnb Linux. Here is a snapshot of GPU utilization over two days:
 
-
+![](media/gpu-utilization-2days.png)
 
 GPU usage ranges from 25% to 60%, following the natural day-night rhythm-lower at night when there's less activity, and peaking during the day as more events occur on camera.
 
