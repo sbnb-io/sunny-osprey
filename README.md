@@ -267,6 +267,13 @@ Make sure the following are installed and configured on your machine:
 - NVIDIA GPU with CUDA support
 - NVIDIA Container Toolkit
 
+### Clone the Repository
+
+```bash
+git clone https://github.com/sbnb-io/sunny-osprey.git
+cd sunny-osprey
+```
+
 ### Running a Quick Test
 
 To quickly evaluate the Sunny Osprey system on your machine, follow these steps to set up and run a test using sample video clips.
