@@ -353,6 +353,9 @@ Start Sunny Osprey as described above, and alerts will be sent to your configure
 - We also plan to investigate the decision-making pathways of the Gemma 3n vision-language model to better understand how they arrive at decisions - kind of like [that scene](https://youtu.be/hV2Q41o-rwE?si=r6wNLdFAT5r5zmjK&t=2230) in **Westworld** where Dr. Ford analyzes Dolores’s consciousness in the lab. That said, we're not yet fully confident that Gemma 3n captures the temporal progression between frames. For example, in the medical emergency experiment above, the model goes straight to describing "a person is lying on the ground" without acknowledging that the person fell first. This kind of transition is essential for truly understanding causality and intent.
 ![](media/westworld.jpg)
 
+- Benchmark VLM scene understanding against the classic “Old Lady in a Window” neighborhood watch to see how close we are to human-level vigilance.\
+![](media/babushka-cctv-640.jpg)
+
 - Who said robotics?
 
 ## Citation
