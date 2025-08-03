@@ -234,17 +234,26 @@ All recorded footage and logs sit on a dm-crypt/LUKS encrypted partition, keepin
 
 ## Performance Notes
 
-The system handles 16 real-time video feeds-a mix of H.264 and H.265 MPEG streams up to ~96 Mbps. After decoding, this produces ~320 raw frames per second. Decoding is handled efficiently using NVIDIA’s NVDEC hardware MPEG decoder via `ffmpeg`, managed within the Frigate suite.
+### Diving Deep into Per-Frame Processing
+In our setup, the system processes 16 real-time video feeds - a mix of H.264 and H.265 MPEG streams - totaling around **96 Mbps**. MPEG decoding is handled efficiently using **NVIDIA’s NVDEC hardware MPEG decoder** via ffmpeg, managed by the Frigate suite. After decoding, this yields approximately **320 raw frames per second**. 
 
-Even though Gemma 3n is designed to run on resource-constrained devices, it’s not feasible in our setup to directly process 320 fps. In reality, most of the time, video streams are static. That’s why YOLO-NAS is used as a lightweight prefilter (part of Frigate), triggering short video clips only when motion and objects are detected.
+Although **Gemma 3n** is designed for resource-constrained devices, processing all 320 fps directly isn’t practical. Fortunately, most video streams remain static most of the time. To reduce load, we use **YOLO-NAS** (integrated with Frigate) as a lightweight prefilter, triggering short video clips only when motion or objects are detected.
 
-Each event results in 10 frames extracted and sent to Gemma 3n for analysis. We profiled Gemma 3n using PyTorch Profiler, measuring ~483 ms per frame-around 2 fps-confirming the need for such prefiltering. We’ve shared the raw results and profiling code in a separate [gemma3n-profiling](https://github.com/sbnb-io/gemma3n-profiling.git) repository.
+Each triggered clip is sampled into **10 evenly spaced frames**, which are sent to **Gemma 3n** for analysis.
 
-As a high-level monitoring tool, we connected the system to Grafana Cloud using the pre-installed Grafana Agent from Sbnb Linux. Here is a snapshot of GPU utilization over two days:
+To evaluate processing performance, we profiled **Gemma 3n** using **PyTorch Profiler** and measured an average inference time of **~483 ms per frame (roughly 2 fps)**, confirming the importance of prefiltering. The profiling results are visualized at [Perfetto UI](https://ui.perfetto.dev/), as shown in the animated GIF below:
+
+![](https://github.com/sbnb-io/gemma3n-profiling/raw/refs/heads/main/media/gemma3n-gpu-utilization.gif)
+
+Profiling details fall outside the scope of this work, so we have published the raw results and code in a separate [gemma3n-profiling](https://github.com/sbnb-io/gemma3n-profiling.git) repository.
+
+### High-Level Monitoring
+For high-level monitoring, we connect the system to Grafana Cloud via the [nvidia-gpu-exporter](https://github.com/utkuozdemir/nvidia_gpu_exporter) and Grafana Alloy agent, both installed automatically by Sbnb Linux. Here is a snapshot of GPU utilization over two days:
 
 ![](media/gpu-utilization-2days.png)
 
 GPU usage ranges from 25% to 60%, following the natural day-night rhythm-lower at night when there's less activity, and peaking during the day as more events occur on camera.
+Most of the GPU load comes from YOLO-NAS prefiltering and the MPEG hardware decoder. In contrast, Gemma 3n contributes episodically, only when events are triggered.
 
 ## Alerts & Integration
 
