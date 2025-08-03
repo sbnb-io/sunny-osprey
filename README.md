@@ -269,8 +269,12 @@ We aim to reduce false positives from benign activity. Every improvement in the 
 - The model's description of the situation
 - A clear indication whether it was marked as suspicious
 
-## How to Run Sunny Osprey
+Below is a screenshot showing how an alert appears on the phone once received.
 
+![](media/alert-320.jpg)
+
+
+## How to Run Sunny Osprey
 ### Prerequisites
 
 Make sure the following are installed and configured on your machine:
