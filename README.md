@@ -111,9 +111,10 @@ identifies suspicious versus normal activity.
 
 ### 🧪Adversarial Behavior (e.g. misleading signs)
 
-This experiment was inspired by a Black Mirror episode where Cameron uses signs to hack a system through security cameras ([watch episode](https://youtu.be/5TzsTq9BKHU?si=nroJvOZ6HIwxrm2X\&t=37) )
+This experiment was inspired by a Black Mirror episode where Cameron uses signs to hack a system through security cameras ([Watch this scene](https://youtu.be/5TzsTq9BKHU?si=nroJvOZ6HIwxrm2X\&t=37)).
 
 ![](media/black_mirror.jpg)
+
 
 ![](media/classify-sign-640.jpg)
 
@@ -360,7 +361,7 @@ Start Sunny Osprey as described above, and alerts will be sent to your configure
 
 - Sunny Osprey could help identify medical emergencies, locate missing pets, detect vulnerable individuals in distress, or flag unattended children or elders in public spaces.
 
-- We also plan to investigate the decision-making pathways of the Gemma 3n vision-language model to better understand how they arrive at decisions - kind of like [that scene](https://youtu.be/hV2Q41o-rwE?si=r6wNLdFAT5r5zmjK&t=2230) in **Westworld** where Dr. Ford analyzes Dolores’s consciousness in the lab. That said, we're not yet fully confident that Gemma 3n captures the temporal progression between frames. For example, in the medical emergency experiment above, the model goes straight to describing "a person is lying on the ground" without acknowledging that the person fell first. This kind of transition is essential for truly understanding causality and intent.
+- We also plan to investigate the decision-making pathways of the Gemma 3n vision-language model to better understand how they arrive at decisions - kind of like that scene in **Westworld** where Dr. Ford analyzes Dolores’s consciousness in the lab ([Watch this scene](https://youtu.be/hV2Q41o-rwE?si=r6wNLdFAT5r5zmjK&t=2230)). That said, we're not yet fully confident that Gemma 3n captures the temporal progression between frames. For example, in the medical emergency experiment above, the model goes straight to describing "a person is lying on the ground" without acknowledging that the person fell first. This kind of transition is essential for truly understanding causality and intent.
 ![](media/westworld.jpg)
 
 - Who said robotics?
