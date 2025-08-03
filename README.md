@@ -234,6 +234,8 @@ All recorded footage and logs sit on a dm-crypt/LUKS encrypted partition, keepin
 
 ## Performance Notes
 
+*Disclaimer: We fully acknowledge that the performance observed below may be lower than expected due to potential misconfigurations or inefficiencies in our current code paths. We’re open to any feedback or suggestions for improvement.*
+
 ### Diving Deep into Per-Frame Processing
 In our setup, the system processes 16 real-time video feeds - a mix of H.264 and H.265 MPEG streams - totaling around **96 Mbps**. MPEG decoding is handled efficiently using **NVIDIA’s NVDEC hardware MPEG decoder** via ffmpeg, managed by the Frigate suite. After decoding, this yields approximately **320 raw frames per second**. 
 
