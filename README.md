@@ -230,6 +230,7 @@ Any camera that can stream live video over RTSP should work - practically all mo
 ## Operating System
 
 We developed our own Linux distribution called [Sbnb Linux (AI Linux)](https://github.com/sbnb-io/sbnb), designed to run AI workloads on bare metal servers. It's plug-and-play - just power on the server and it automatically configures the GPU, launches the virtual machine, and starts containers with your solution.
+All recorded footage and logs sit on a dm-crypt/LUKS encrypted partition, keeping them secure even if the server is lost or stolen.
 
 ## Performance Notes
 
