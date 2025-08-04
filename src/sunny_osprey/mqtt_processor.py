@@ -82,7 +82,7 @@ class FrigateEventProcessor:
         """Callback for MQTT messages."""
         try:
             payload = json.loads(msg.payload.decode())
-            self.logger.info(f"Received MQTT event: {payload.get('type', 'unknown')}")
+            self.logger.debug(f"Received MQTT event: {payload.get('type', 'unknown')}")
             
             # Process only "end" events
             if payload.get("type") == "end":
@@ -122,12 +122,12 @@ class FrigateEventProcessor:
                 
                 # Check camera filtering
                 if not self.config.should_process_camera(camera_name):
-                    self.logger.info(f"Skipping event from camera '{camera_name}' (not in enabled cameras list)")
+                    self.logger.debug(f"Skipping event from camera '{camera_name}' (not in enabled cameras list)")
                     return False
             
             # Check other filters using the config
             if self.config.should_skip_event(event_data.get('after', {}) or event_data.get('before', {})):
-                self.logger.info(f"Skipping event based on processing filters")
+                self.logger.debug(f"Skipping event based on processing filters")
                 return False
             
             return True
