@@ -12,6 +12,7 @@ import cv2
 from PIL import Image
 from transformers import AutoProcessor, Gemma3nForConditionalGeneration
 import torch
+import setproctitle
 
 
 class LLMInferenceEngine:
@@ -74,6 +75,8 @@ class LLMInferenceEngine:
     def _initialize_model(self):
         """Initialize the LLM model (lazy loading)."""
         if self.model is None:
+            # Set process name for nvidia-smi display
+            setproctitle.setproctitle("sunny-osprey")
             self.logger.info("Initializing LLM model...")
             
             # Get model name from config or use default
