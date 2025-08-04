@@ -7,20 +7,33 @@ import sys
 import time
 import os
 
-def run_mqtt_processor(mqtt_host: str = None, mqtt_port: int = None,
-                       api_base_url: str = None,
-                       prompt_file: str = "/app/prompt.txt"):
+def run_mqtt_processor(config_path: str = "/app/sunny-osprey-config.yaml"):
     """Run the MQTT event processor with retry logic for MQTT connection."""
     from sunny_osprey.mqtt_processor import FrigateEventProcessor
     from sunny_osprey.llm_inference import LLMInferenceEngine
+    from sunny_osprey.config import SunnyOspreyConfig
     
     print("🚀 Initializing Sunny Osprey Security Camera Analysis System")
     print("=" * 60)
     
+    # Load configuration
+    print("📋 Loading configuration...")
+    config = SunnyOspreyConfig(config_path)
+    
+    # Get configuration values
+    mqtt_config = config.get_mqtt_config()
+    frigate_config = config.get_frigate_config()
+    llm_config = config.get_llm_config()
+    
+    mqtt_host = mqtt_config.get('host', 'mqtt')
+    mqtt_port = mqtt_config.get('port', 1883)
+    api_base_url = frigate_config.get('api_base_url', 'http://frigate:5000')
+    prompt_file = llm_config.get('prompt_file', '/app/prompt.txt')
+    
     # Initialize LLM model at startup
     print("🧠 Initializing LLM model...")
     try:
-        llm_engine = LLMInferenceEngine(prompt_file=prompt_file)
+        llm_engine = LLMInferenceEngine(prompt_file=prompt_file, config=llm_config)
         # Force model initialization
         llm_engine._initialize_model()
         print("✅ LLM model initialized successfully")
@@ -34,10 +47,19 @@ def run_mqtt_processor(mqtt_host: str = None, mqtt_port: int = None,
         mqtt_port=mqtt_port,
         api_base_url=api_base_url,
         prompt_file=prompt_file,
-        llm_engine=llm_engine  # Pass the initialized engine
+        llm_engine=llm_engine,  # Pass the initialized engine
+        config=config  # Pass the configuration
     )
     
     print("📡 Initializing MQTT connection...")
+    
+    # Display camera filtering info
+    enabled_cameras = config.get_camera_config().get('enabled_cameras', [])
+    if enabled_cameras:
+        print(f"📹 Processing events from cameras: {', '.join(enabled_cameras)}")
+    else:
+        print("📹 Processing events from all cameras")
+    
     while True:
         try:
             print("Starting Frigate Event Processor...")
@@ -61,22 +83,11 @@ def run_mqtt_processor(mqtt_host: str = None, mqtt_port: int = None,
 def parse_arguments():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="Sunny Osprey MQTT Event Processor")
-    parser.add_argument("--mqtt-host", default=os.getenv('MQTT_HOST', 'mqtt'), 
-                       help="MQTT broker host (default: MQTT_HOST env var or mqtt)")
-    parser.add_argument("--mqtt-port", type=int, default=int(os.getenv('MQTT_PORT', '1883')),
-                       help="MQTT broker port (default: MQTT_PORT env var or 1883)")
-    parser.add_argument("--api-base-url", default=os.getenv('FRIGATE_API_URL', 'http://frigate:5000'),
-                       help="Frigate API base URL (default: FRIGATE_API_URL env var or http://frigate:5000)")
-    parser.add_argument("--prompt-file", default="/app/prompt.txt",
-                       help="Path to prompt file (default: /app/prompt.txt)")
+    parser.add_argument("--config", default="/app/sunny-osprey-config.yaml",
+                       help="Path to configuration file (default: /app/sunny-osprey-config.yaml)")
     
     return parser.parse_args()
 
 if __name__ == "__main__":
     args = parse_arguments()
-    run_mqtt_processor(
-        mqtt_host=args.mqtt_host,
-        mqtt_port=args.mqtt_port,
-        api_base_url=args.api_base_url,
-        prompt_file=args.prompt_file
-    )
+    run_mqtt_processor(config_path=args.config)

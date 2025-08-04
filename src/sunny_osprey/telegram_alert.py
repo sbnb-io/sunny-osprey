@@ -5,15 +5,21 @@ import logging
 from typing import Dict, Any
 
 class TelegramAlert:
-    def __init__(self):
-        self.telegram_token = os.getenv('TELEGRAM_BOT_TOKEN')
-        self.telegram_chat_id = os.getenv('CHAT_ID')
+    def __init__(self, config: Dict[str, Any] = None):
+        # Use config if provided, otherwise fall back to environment variables
+        if config:
+            self.telegram_token = config.get('bot_token', '')
+            self.telegram_chat_id = config.get('chat_id', '')
+        else:
+            self.telegram_token = os.getenv('TELEGRAM_BOT_TOKEN')
+            self.telegram_chat_id = os.getenv('TELEGRAM_CHAT_ID')  # Updated to unified naming
+        
         self.logger = logging.getLogger(__name__)
         self.enabled = self._validate_config()
 
     def _validate_config(self):
         if not self.telegram_token or not self.telegram_chat_id:
-            self.logger.warning("Missing TELEGRAM_BOT_TOKEN or CHAT_ID for Telegram alerts.")
+            self.logger.warning("Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID for Telegram alerts.")
             return False
         return True
 

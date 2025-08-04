@@ -6,7 +6,6 @@ tests/data/alien.mp4 filter=lfs diff=lfs merge=lfs -text
 tests/data/classify-video-sign.mp4 filter=lfs diff=lfs merge=lfs -text
 tests/data/criminal.mp4 filter=lfs diff=lfs merge=lfs -text
 tests/data/gate-static.mp4 filter=lfs diff=lfs merge=lfs -text
-misc/yolo_nas_s.onnx filter=lfs diff=lfs merge=lfs -text
 media/classify-sign-640.jpg filter=lfs diff=lfs merge=lfs -text
 media/gpu-utilization-2days.png filter=lfs diff=lfs merge=lfs -text
 media/package-snapshot-640.jpg filter=lfs diff=lfs merge=lfs -text
@@ -19,3 +18,4 @@ media/alien-snapshot-640.jpg filter=lfs diff=lfs merge=lfs -text
 media/black_mirror.jpg filter=lfs diff=lfs merge=lfs -text
 media/car-640.jpg filter=lfs diff=lfs merge=lfs -text
 media/json-llm.jpg filter=lfs diff=lfs merge=lfs -text
+frigate-config/yolo_nas_s.onnx filter=lfs diff=lfs merge=lfs -text

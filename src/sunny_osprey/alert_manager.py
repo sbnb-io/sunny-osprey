@@ -52,12 +52,19 @@ def is_suspicious_activity_detected(llm_result: Dict[str, Any]) -> bool:
 
 class AlertManager:
     """Routes alerts to the appropriate backend (Telegram or Grafana IRM)."""
-    def __init__(self):
+    def __init__(self, config: Dict[str, Any] = None):
+        self.config = config or {}
         self.backend = os.getenv('ALERT_BACKEND', 'telegram').lower()
+        
+        # Get alert configurations
+        alerts_config = self.config.get('alerts', {})
+        telegram_config = alerts_config.get('telegram', {})
+        grafana_config = alerts_config.get('grafana', {})
+        
         if self.backend == 'telegram':
-            self.alert_backend = TelegramAlert()
+            self.alert_backend = TelegramAlert(telegram_config)
         else:
-            self.alert_backend = GrafanaIRMAlert()
+            self.alert_backend = GrafanaIRMAlert(grafana_config)
         self.video_clip_base_url = os.getenv('VIDEO_CLIP_BASE_URL')
 
     def _prepare_incident_data(self, event_id: str, llm_result: Dict[str, Any]) -> Dict[str, Any]:
@@ -88,4 +95,20 @@ class AlertManager:
 
     def send_incident(self, event_id: str, llm_result: dict) -> bool:
         incident_data = self._prepare_incident_data(event_id, llm_result)
+        
+        # Check if we should send this incident based on configuration
+        send_all_activities = self.config.get('send_all_activities', False)
+        is_suspicious = incident_data.get('is_suspicious', False)
+        
+        # Only send if it's suspicious OR if send_all_activities is enabled
+        if not is_suspicious and not send_all_activities:
+            logging.getLogger(__name__).info(f"Normal activity skipped for event {event_id} (send_all_activities: {send_all_activities})")
+            return True  # Return True to indicate "successfully handled" (by skipping)
+        
+        # Log what we're actually doing
+        if is_suspicious:
+            logging.getLogger(__name__).info(f"Sending suspicious activity alert for event {event_id}")
+        else:
+            logging.getLogger(__name__).info(f"Sending normal activity notification for event {event_id} (send_all_activities: {send_all_activities})")
+        
         return self.alert_backend.send_incident(incident_data) 

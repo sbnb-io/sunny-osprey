@@ -12,6 +12,7 @@ import requests
 import paho.mqtt.client as mqtt
 from .llm_inference import LLMInferenceEngine
 from .alert_manager import AlertManager, is_suspicious_activity_detected
+from .config import SunnyOspreyConfig
 import signal
 import sys
 
@@ -21,7 +22,8 @@ class FrigateEventProcessor:
     
     def __init__(self, mqtt_host: str = "127.0.0.1", mqtt_port: int = 1883,
                  api_base_url: str = "http://127.0.0.1:5000",
-                 prompt_file: str = "prompt.txt", llm_engine: Optional[LLMInferenceEngine] = None):
+                 prompt_file: str = "prompt.txt", llm_engine: Optional[LLMInferenceEngine] = None,
+                 config: Optional[SunnyOspreyConfig] = None):
         """
         Initialize the Frigate event processor.
         
@@ -31,11 +33,16 @@ class FrigateEventProcessor:
             api_base_url: Frigate API base URL
             prompt_file: Path to the prompt file for LLM inference
             llm_engine: Optional pre-initialized LLM inference engine
+            config: Optional configuration object
         """
-        self.mqtt_host = mqtt_host
-        self.mqtt_port = mqtt_port
-        self.api_base_url = api_base_url
-        self.prompt_file = prompt_file
+        # Load configuration
+        self.config = config or SunnyOspreyConfig()
+        
+        # Use config values if not explicitly provided
+        self.mqtt_host = mqtt_host or self.config.get_mqtt_host()
+        self.mqtt_port = mqtt_port or self.config.get_mqtt_port()
+        self.api_base_url = api_base_url or self.config.get_frigate_api_url()
+        self.prompt_file = prompt_file or self.config.get_prompt_file()
         
         # Initialize MQTT client
         self.mqtt_client = mqtt.Client()
@@ -46,16 +53,14 @@ class FrigateEventProcessor:
         if llm_engine is not None:
             self.llm_engine = llm_engine
         else:
-            self.llm_engine = LLMInferenceEngine(prompt_file=prompt_file)
+            llm_config = self.config.get_llm_config()
+            self.llm_engine = LLMInferenceEngine(prompt_file=prompt_file, config=llm_config)
         
         # Initialize Alert Manager
-        self.alert_manager = AlertManager()
+        alerts_config = self.config.get_alerts_config()
+        self.alert_manager = AlertManager(alerts_config)
         
-        # Setup logging
-        logging.basicConfig(
-            level=logging.INFO,
-            format='%(asctime)s - %(levelname)s - %(message)s'
-        )
+        # Setup logging is now handled by config
         self.logger = logging.getLogger(__name__)
     
     def _on_connect(self, client, userdata, flags, rc):
@@ -81,7 +86,11 @@ class FrigateEventProcessor:
             
             # Process only "end" events
             if payload.get("type") == "end":
-                self._process_end_event(payload)
+                # Check if we should process this event based on configuration
+                if self._should_process_event(payload):
+                    self._process_end_event(payload)
+                else:
+                    self.logger.debug(f"Skipping event based on configuration filters")
             else:
                 self.logger.debug(f"Skipping non-end event: {payload.get('type')}")
                 
@@ -89,6 +98,44 @@ class FrigateEventProcessor:
             self.logger.error(f"Failed to parse MQTT message: {e}")
         except Exception as e:
             self.logger.error(f"Error processing MQTT message: {e}")
+    
+    def _should_process_event(self, event_data: Dict[str, Any]) -> bool:
+        """
+        Check if an event should be processed based on configuration filters.
+        
+        Args:
+            event_data: Event data from Frigate
+            
+        Returns:
+            True if event should be processed, False otherwise
+        """
+        try:
+            # Extract camera name from event
+            camera_name = None
+            if 'after' in event_data and event_data['after']:
+                camera_name = event_data['after'].get('camera')
+            elif 'before' in event_data and event_data['before']:
+                camera_name = event_data['before'].get('camera')
+            
+            if camera_name:
+                self.logger.debug(f"Event from camera: {camera_name}")
+                
+                # Check camera filtering
+                if not self.config.should_process_camera(camera_name):
+                    self.logger.info(f"Skipping event from camera '{camera_name}' (not in enabled cameras list)")
+                    return False
+            
+            # Check other filters using the config
+            if self.config.should_skip_event(event_data.get('after', {}) or event_data.get('before', {})):
+                self.logger.info(f"Skipping event based on processing filters")
+                return False
+            
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Error checking if event should be processed: {e}")
+            # Default to processing if there's an error
+            return True
     
     def _process_end_event(self, event_data: Dict[str, Any]):
         """Process an end event from Frigate."""
@@ -116,15 +163,15 @@ class FrigateEventProcessor:
                 # Send incident to alert manager for all events
                 is_suspicious = is_suspicious_activity_detected(result)
                 if is_suspicious:
-                    self.logger.info(f"Suspicious activity detected for event {event_id}, sending alert")
+                    self.logger.info(f"Suspicious activity detected for event {event_id}, processing alert")
                 else:
-                    self.logger.info(f"Normal activity detected for event {event_id}, sending notification")
+                    self.logger.info(f"Normal activity detected for event {event_id}, processing notification")
                 
                 incident_sent = self.alert_manager.send_incident(event_id, result)
                 if incident_sent:
-                    self.logger.info(f"Alert/notification sent successfully for event {event_id}")
+                    self.logger.info(f"Alert/notification processed successfully for event {event_id}")
                 else:
-                    self.logger.warning(f"Failed to send alert/notification for event {event_id}")
+                    self.logger.warning(f"Failed to process alert/notification for event {event_id}")
             
             # Clean up temporary file (but not local test files)
             if not video_path.startswith('/app/test_videos/'):

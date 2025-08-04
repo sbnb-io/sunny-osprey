@@ -1,0 +1,58 @@
+# Sunny Osprey Configuration File
+# This file configures the Sunny Osprey security camera analysis system
+
+# MQTT Configuration
+mqtt:
+  enabled: true
+  host: mqtt
+  port: 1883
+  topic: frigate/events
+
+# Frigate API Configuration
+frigate:
+  api_base_url: http://frigate:5000
+
+# Camera Filtering
+# List of camera names to process. If empty or not specified, all cameras will be processed.
+# Example: ["LPR", "FRONT_DOOR", "BACKYARD"]
+cameras:
+  enabled_cameras:
+    # - LPR
+    # - FRONT_DOOR
+    # - BACKYARD
+    # - GARAGE
+
+# LLM Configuration
+llm:
+  prompt_file: /app/prompt.txt
+  model_name: gemma-3n-E2B-it
+  max_new_tokens: 500
+  # max_memory is optional - uncomment and adjust if you need to control memory allocation
+  # max_memory:
+  #   0: "10GB"  # GPU memory limit
+  #   cpu: "4GB"  # CPU memory limit for fallback
+
+# Alert Configuration (Optional)
+# Configure alert systems to receive notifications about security events
+# Comment out or remove entire sections to disable alerts
+alerts:
+  # Global alert settings
+  send_all_activities: false  # Set to true to send all activities, false for suspicious only
+  
+  # Telegram Bot Alerts (Optional)
+  telegram:
+    bot_token: ${TELEGRAM_BOT_TOKEN}
+    chat_id: ${TELEGRAM_CHAT_ID}
+  
+  # Grafana IRM (Incident Response Management) alerts (Optional)
+  grafana:
+    url: ${GRAFANA_URL}
+    api_key: ${GRAFANA_API_KEY}
+
+# Logging Configuration
+logging:
+  level: INFO
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# Version
+version: 1.0.0 

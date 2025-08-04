@@ -18,10 +18,7 @@ class TestParseArguments:
         
         try:
             args = parse_arguments()
-            assert args.mqtt_host == 'mqtt'  # Default from env or 'mqtt'
-            assert args.mqtt_port == 1883
-            assert args.api_base_url == 'http://frigate:5000'
-            assert args.prompt_file == '/app/prompt.txt'
+            assert args.config == '/app/sunny-osprey-config.yaml'
         finally:
             sys.argv = original_argv
     
@@ -31,18 +28,12 @@ class TestParseArguments:
         original_argv = sys.argv
         sys.argv = [
             'test_main.py',
-            '--mqtt-host', 'localhost',
-            '--mqtt-port', '1884',
-            '--api-base-url', 'http://localhost:5001',
-            '--prompt-file', '/custom/prompt.txt'
+            '--config', '/custom/config.yaml'
         ]
         
         try:
             args = parse_arguments()
-            assert args.mqtt_host == 'localhost'
-            assert args.mqtt_port == 1884
-            assert args.api_base_url == 'http://localhost:5001'
-            assert args.prompt_file == '/custom/prompt.txt'
+            assert args.config == '/custom/config.yaml'
         finally:
             sys.argv = original_argv
 
@@ -53,7 +44,7 @@ class TestRunMqttProcessor:
     def test_run_mqtt_processor_initialization(self):
         """Test that run_mqtt_processor can be called without errors."""
         # Mock the FrigateEventProcessor and LLMInferenceEngine to avoid actual connections
-        from unittest.mock import patch, Mock
+        from unittest.mock import patch, Mock, ANY
         
         with patch('sunny_osprey.llm_inference.LLMInferenceEngine') as mock_llm_class, \
              patch('sunny_osprey.mqtt_processor.FrigateEventProcessor') as mock_processor_class:
@@ -69,24 +60,20 @@ class TestRunMqttProcessor:
             mock_processor_class.return_value = mock_processor
             
             # Call the function with test parameters
-            run_mqtt_processor(
-                mqtt_host="test",
-                mqtt_port=1883,
-                api_base_url="http://test:5000",
-                prompt_file="/app/prompt.txt"
-            )
+            run_mqtt_processor(config_path="/app/sunny-osprey-config.yaml")
             
             # Verify that LLMInferenceEngine was called
-            mock_llm_class.assert_called_once_with(prompt_file="/app/prompt.txt")
+            mock_llm_class.assert_called_once_with(prompt_file="/app/prompt.txt", config={'prompt_file': '/app/prompt.txt', 'model_name': 'gemma-3n-E2B-it', 'max_new_tokens': 500})
             mock_llm_engine._initialize_model.assert_called_once()
             
             # Verify that FrigateEventProcessor was called with correct parameters
             mock_processor_class.assert_called_once_with(
-                mqtt_host="test",
-                mqtt_port=1883,
-                api_base_url="http://test:5000",
-                prompt_file="/app/prompt.txt",
-                llm_engine=mock_llm_engine
+                mqtt_host="mqtt",  # Default from config
+                mqtt_port=1883,    # Default from config
+                api_base_url="http://frigate:5000",  # Default from config
+                prompt_file="/app/prompt.txt",  # Default from config
+                llm_engine=mock_llm_engine,
+                config=ANY  # Accept any config object
             )
             
             # Verify that the processor's start method was called

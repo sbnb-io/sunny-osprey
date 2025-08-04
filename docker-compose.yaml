@@ -19,20 +19,15 @@ services:
       dockerfile: Dockerfile
     container_name: sunny-osprey
     environment:
-      - MQTT_HOST=mqtt
-      - MQTT_PORT=1883
-      - FRIGATE_HOST=frigate
-      - FRIGATE_PORT=8971
-      - HF_TOKEN=${HF_TOKEN}
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-      - CHAT_ID=${CHAT_ID}
       - PYTHONUNBUFFERED=1
     volumes:
       - ~/.cache/huggingface:/root/.cache/huggingface
-      - ./tests/data:/app/test_videos:ro
+      - ./tests/data:/app/test_videos:rw
       - sunnyosprey_ready:/shared
       - ./prompt.txt:/app/prompt.txt:ro
       - ./system_prompt.txt:/app/system_prompt.txt:ro
+      - ./sunny-osprey-config.yaml:/app/sunny-osprey-config.yaml:ro
+      - ./.env:/app/.env:ro
     deploy:
       resources:
         reservations:
@@ -65,7 +60,7 @@ services:
       - MQTT_PORT=1883
     volumes:
       - ~/.cache/huggingface:/root/.cache/huggingface
-      - ./tests/data:/app/test_videos:ro
+      - ./tests/data:/app/test_videos:rw
       - sunnyosprey_ready:/shared
     command: ["/app/inject_test_events.sh"]
     depends_on:
@@ -80,14 +75,14 @@ services:
 
   # Optional: Frigate (if you want to run a local instance for testing)
   frigate:
-    image: ghcr.io/blakeblackshear/frigate:stable
+    image: ghcr.io/blakeblackshear/frigate:0.16.0-beta3-tensorrt
+    runtime: nvidia
     container_name: sunny-osprey-frigate
-    shm_size: "64mb"
+    shm_size: "512mb"
     ports:
       - "8971:8971"
     volumes:
-      - ./frigate-config.yaml:/config/config.yaml:ro
-      - ./misc/yolo_nas_s.onnx:/config/yolo_nas_s.onnx:ro
+      - ./frigate-config:/config:rw
       - /etc/localtime:/etc/localtime:ro
     deploy:
       resources:

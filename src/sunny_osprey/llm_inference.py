@@ -17,14 +17,16 @@ import torch
 class LLMInferenceEngine:
     """Handles LLM inference for video analysis."""
     
-    def __init__(self, prompt_file: str = "prompt.txt"):
+    def __init__(self, prompt_file: str = "prompt.txt", config: Optional[Dict[str, Any]] = None):
         """
         Initialize the LLM inference engine.
         
         Args:
             prompt_file: Path to the prompt file for LLM inference
+            config: Optional configuration dictionary for LLM settings
         """
         self.prompt_file = prompt_file
+        self.config = config or {}
         
         # Initialize LLM model (lazy loading)
         self.model = None
@@ -73,19 +75,32 @@ class LLMInferenceEngine:
         """Initialize the LLM model (lazy loading)."""
         if self.model is None:
             self.logger.info("Initializing LLM model...")
-            model_name = 'gemma-3n-E2B-it'
+            
+            # Get model name from config or use default
+            model_name = self.config.get('model_name', 'gemma-3n-E2B-it')
             model_id = f"google/{model_name}"
+            
+            # Prepare model initialization parameters
+            model_kwargs = {
+                'device_map': "auto",
+                'torch_dtype': torch.bfloat16,
+            }
+            
+            # Only add max_memory if specified in config
+            if 'max_memory' in self.config:
+                model_kwargs['max_memory'] = self.config['max_memory']
+                self.logger.info(f"Using max_memory from config: {self.config['max_memory']}")
+            else:
+                self.logger.info("No max_memory specified in config, using default device mapping")
             
             # Use auto device map with CPU fallback for audio tower
             self.model = Gemma3nForConditionalGeneration.from_pretrained(
                 model_id, 
-                device_map="auto", 
-                torch_dtype=torch.bfloat16,
-                max_memory={0: "10GB", "cpu": "4GB"}  # Limit GPU memory, allow CPU fallback
+                **model_kwargs
             ).eval()
             
             self.processor = AutoProcessor.from_pretrained(model_id)
-            self.logger.info("LLM model initialized with auto device mapping")
+            self.logger.info(f"LLM model initialized with device mapping: auto")
     
     def run_inference(self, video_path: str) -> Optional[Dict[str, Any]]:
         """Run LLM inference on video frames."""
@@ -133,7 +148,10 @@ class LLMInferenceEngine:
                 inputs = self.processor.apply_chat_template(
                     messages, add_generation_prompt=True, tokenize=True,
                     return_dict=True, return_tensors="pt"
-                ).to('cuda')
+                )
+                # Move to appropriate device (GPU if available, otherwise CPU)
+                device = next(self.model.parameters()).device
+                inputs = {k: v.to(device) for k, v in inputs.items()}
                 
                 input_length = inputs["input_ids"].shape[-1]
                 

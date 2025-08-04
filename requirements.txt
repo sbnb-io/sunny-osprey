@@ -10,3 +10,5 @@ transformers==4.53.3
 accelerate>=0.20.0
 timm
 python-telegram-bot>=20.0
+PyYAML>=6.0
+python-dotenv>=1.0.0
