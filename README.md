@@ -2,9 +2,9 @@
 
 Sunny Osprey is an AI-powered buddy for security guards - one that never sleeps, blinks, or calls in sick. It monitors live security camera feeds and asks **Google’s Gemma 3n** model to detect unusual or suspicious activity, including medical emergencies.
 
-The entire system runs locally on a consumer-grade NVIDIA GPU. This ensures privacy, low latency, data sovereignty, and avoids cloud inference costs (which can exceed $75/month per camera, based on our usage) while keeping all footage on-site to block centralized surveillance abuses that can fuel authoritarian control.
-**Sunny Osprey delivers real safety impact in our communities by detecting unusual activity - including potential medical emergencies - before it becomes a threat.**
+The entire system runs locally on a consumer-grade NVIDIA GPU. This ensures privacy, low latency, data sovereignty, and avoids cloud inference costs (which can exceed $75/month per camera, based on our usage) while keeping all footage on-site to block centralized surveillance abuses that can fuel authoritarian control (Big Brother not invited).
 
+**Our system delivers real safety impact in our communities by detecting unusual activity - including potential medical emergencies - before it becomes a threat.**
 
 <p align="center">
   <img src="media/sunny-osprey-security-guard-640.png" alt="Security guard monitoring screens" width="640">
