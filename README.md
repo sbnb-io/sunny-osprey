@@ -370,7 +370,7 @@ Start Sunny Osprey as described above, and alerts will be sent to your configure
 
 ## Next Steps
 
-- Benchmark VLM scene understanding against the classic “Old Lady in a Window” neighborhood watch to see how close we are to human-level vigilance.\
+- Benchmark VLM scene understanding against the classic “Babushka” neighborhood watch to see how close we are to human-level vigilance.\
 ![](media/babushka-cctv-640.jpg)
 
 - We see tremendous possibilities ahead! One exciting direction is building a data flywheel: the system learns from environmental context and human feedback to improve its suspicious activity detection over time.
