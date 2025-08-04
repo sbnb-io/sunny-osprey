@@ -259,6 +259,48 @@ For high-level monitoring, we connect the system to Grafana Cloud via the [nvidi
 GPU usage ranges from 25% to 60%, following the natural day-night rhythm-lower at night when there's less activity, and peaking during the day as more events occur on camera.
 Most of the GPU load comes from YOLO-NAS prefiltering and the MPEG hardware decoder. In contrast, Gemma 3n contributes episodically, only when events are triggered.
 
+### GPU Memory
+
+To save precious GPU VRAM, we keep **Gemma 3n** audio parameters (`audio_tower`) in the CPU’s main memory instead of the GPU. This optimization yields approximately **1.3 GB** of GPU VRAM savings.
+
+During model loading, we log each parameter layer with its:
+- **Device** (e.g., `cuda:0` means loaded into GPU VRAM, `meta` means CPU memory)
+- **Memory usage in MB**
+- **Parameter count (M)**
+- **Shape**
+
+Example excerpt (first few and some `audio_tower` entries):
+```
+sunny_osprey.llm_inference - INFO:
+
+Parameter Name                                               Device Memory(MB) Params(M) Shape
+-----------------------------------------------------------------------------------------------
+model.language_model.embed_tokens_per_layer.weight           cuda:0   3840.0MB  2013.3M [262144, 7680]
+model.language_model.embed_tokens.weight                     cuda:0   1025.0MB   537.4M [262400, 2048]
+...
+model.audio_tower.conformer.0.ffw_layer_start.ffw_layer_1.weight meta       18.0MB     9.4M [6144, 1536]
+model.audio_tower.conformer.0.ffw_layer_start.ffw_layer_2.weight meta       18.0MB     9.4M [1536, 6144]
+model.audio_tower.conformer.0.ffw_layer_end.ffw_layer_1.weight meta       18.0MB     9.4M [6144, 1536]
+...
+Total parameters: 5439.44M (GPU: 9068.95 MB, CPU: 1305.95 MB, Total: 10374.91 MB)
+```
+Here, `model.audio_tower.*` entries remain in CPU memory (`meta`), avoiding GPU VRAM allocation.
+
+**Summary for `gemma-3n-E2B-it`:**
+- **GPU memory used by model:** 9068.95 MB
+- **CPU memory used by model:** 1305.95 MB (our GPU VRAM savings!)
+- **Total parameters:** 5.44 B
+
+**nvidia-smi output (fully loaded system):**
+
+![](media/sunny-osprey-nvidia-smi.jpg)
+
+- `sunny-osprey` (Gemma 3n): ~10.4 GB VRAM
+- `frigate.detector.onnx` (YOLO-NAS): ~278 MB VRAM
+- `ffmpeg` (NVDEC MPEG decoder): 150–300 MB per video stream/camera
+
+In this our pilot setup, this puts us at **~86% GPU VRAM utilization**. If at some point in the future we decide to add other GPU‑oriented services, we’ll either need to optimize further or add a second NVIDIA GPU.
+
 ## Alerts & Integration
 
 Gemma 3n produces a structured JSON result for each processed video segment. If the model flags the activity as suspicious, we immediately notify the human security team.
