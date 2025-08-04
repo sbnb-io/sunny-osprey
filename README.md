@@ -261,7 +261,7 @@ Most of the GPU load comes from YOLO-NAS prefiltering and the MPEG hardware deco
 
 ### GPU Memory
 
-To save precious GPU VRAM, we keep **Gemma 3n** audio parameters (`audio_tower`) in the CPU’s main memory instead of the GPU. This optimization yields approximately **1.3 GB** of GPU VRAM savings.
+To save precious GPU VRAM, we keep **Gemma 3n** audio parameters (`audio_tower`) in the CPU’s main memory instead of the GPU, because our video processing tasks do not require the audio component of the model. This optimization yields approximately **1.3 GB** of GPU VRAM savings.
 
 During model loading, we log each parameter layer with its:
 - **Device** (e.g., `cuda:0` means loaded into GPU VRAM, `meta` means CPU memory)
