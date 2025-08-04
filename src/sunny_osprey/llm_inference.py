@@ -82,9 +82,52 @@ class LLMInferenceEngine:
             
             # Prepare model initialization parameters
             model_kwargs = {
-                'device_map': "auto",
                 'torch_dtype': torch.bfloat16,
             }
+            
+            # Create custom device map to keep audio tower on CPU
+            if torch.cuda.is_available():
+                # Load model temporarily to get module names
+                temp_model = Gemma3nForConditionalGeneration.from_pretrained(
+                    model_id, 
+                    torch_dtype=torch.bfloat16,
+                    device_map="cpu"  # Load on CPU first to inspect
+                )
+                
+                # Create comprehensive device map
+                device_map = {}
+                
+                for name, _ in temp_model.named_modules():
+                    if 'audio_tower' in name or 'embed_audio' in name:
+                        device_map[name] = "cpu"
+                    else:
+                        device_map[name] = 0  # GPU device 0
+                
+                # Clean up temp model
+                del temp_model
+                torch.cuda.empty_cache()
+                
+                model_kwargs['device_map'] = device_map
+                self.logger.info("Using custom device map: audio components on CPU, rest on GPU")
+            else:
+                # CPU-only mode
+                model_kwargs['device_map'] = "cpu"
+                self.logger.info("CUDA not available, using CPU-only mode")
+            
+            # Add attention implementation
+            attn_implementation = self.config.get('attn_implementation', 'eager')
+            if attn_implementation:
+                # Check if flash_attention_2 is available, fall back to eager if not
+                if attn_implementation == 'flash_attention_2':
+                    try:
+                        import flash_attn
+                        model_kwargs['attn_implementation'] = attn_implementation
+                        self.logger.info("Using Flash Attention 2 for optimized GPU memory usage")
+                    except ImportError:
+                        self.logger.warning("Flash Attention 2 not available, falling back to eager")
+                        model_kwargs['attn_implementation'] = 'eager'
+                else:
+                    model_kwargs['attn_implementation'] = attn_implementation
             
             # Only add max_memory if specified in config
             if 'max_memory' in self.config:
@@ -93,7 +136,7 @@ class LLMInferenceEngine:
             else:
                 self.logger.info("No max_memory specified in config, using default device mapping")
             
-            # Use auto device map with CPU fallback for audio tower
+            # Use custom device map for optimal GPU memory usage
             self.model = Gemma3nForConditionalGeneration.from_pretrained(
                 model_id, 
                 **model_kwargs
@@ -101,6 +144,40 @@ class LLMInferenceEngine:
             
             self.processor = AutoProcessor.from_pretrained(model_id)
             self.logger.info(f"LLM model initialized with device mapping: auto")
+            
+            # Print device and size information for model parameters (sorted by size)
+            self.logger.info("Model parameter devices and sizes (sorted by size, largest first):")
+            self.logger.info(f"{'Parameter Name':<60} {'Device':<6} {'Memory(MB)':>10} {'Params(M)':>9} {'Shape'}")
+            self.logger.info("-" * 95)
+            total_params = 0
+            param_info = []
+            gpu_memory = 0
+            cpu_memory = 0
+            
+            for name, param in self.model.named_parameters():
+                param_size = param.numel() * param.element_size()
+                param_size_mb = param_size / (1024 * 1024)
+                param_count = param.numel()
+                total_params += param_count
+                param_info.append((name, param.device, param_size_mb, param_count, list(param.shape)))
+                
+                # Track memory by device
+                if param.device.type == 'cuda':
+                    gpu_memory += param_size_mb
+                else:
+                    cpu_memory += param_size_mb
+            
+            # Sort by size (largest first)
+            param_info.sort(key=lambda x: x[2], reverse=True)
+            
+            for name, device, size_mb, param_count, shape in param_info:
+                param_count_m = param_count / 1_000_000
+                device_str = str(device)
+                self.logger.info(f"{name:<60} {device_str:<6} {size_mb:>8.1f}MB {param_count_m:>7.1f}M {shape}")
+            
+            total_params_m = total_params / 1_000_000
+            total_memory = gpu_memory + cpu_memory
+            self.logger.info(f"Total parameters: {total_params_m:.2f}M (GPU: {gpu_memory:.2f} MB, CPU: {cpu_memory:.2f} MB, Total: {total_memory:.2f} MB)")
     
     def run_inference(self, video_path: str) -> Optional[Dict[str, Any]]:
         """Run LLM inference on video frames."""
