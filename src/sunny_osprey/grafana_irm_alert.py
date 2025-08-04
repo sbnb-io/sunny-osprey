@@ -6,26 +6,23 @@ from typing import Dict, Any
 from datetime import datetime, timezone
 
 class GrafanaIRMAlert:
-    def __init__(self):
-        self.host = os.getenv('GRAFANA_HOST')
-        self.username = os.getenv('GRAFANA_USERNAME')
-        self.password = os.getenv('GRAFANA_PASSWORD')
-        self.org_id = os.getenv('GRAFANA_ORG_ID', '1')
+    def __init__(self, config: Dict[str, Any] = None):
+        self.config = config or {}
+        self.url = self.config.get('url', '')
+        self.api_key = self.config.get('api_key', '')
         self.logger = logging.getLogger(__name__)
         self.enabled = self._validate_config()
 
     def _validate_config(self):
-        required_vars = ['GRAFANA_HOST', 'GRAFANA_USERNAME', 'GRAFANA_PASSWORD']
-        missing_vars = [var for var in required_vars if not getattr(self, var.lower().replace('grafana_', ''))]
-        if missing_vars:
-            self.logger.warning(f"Missing required environment variables for Grafana: {missing_vars}")
+        if not self.url or not self.api_key:
+            self.logger.warning("Missing required Grafana configuration: url or api_key")
             self.logger.warning("Grafana alerts will be disabled")
             return False
         return True
 
     def _get_auth_headers(self) -> Dict[str, str]:
         return {
-            'Authorization': f'Bearer {self.password}',
+            'Authorization': f'Bearer {self.api_key}',
             'Content-Type': 'application/json'
         }
 
@@ -59,9 +56,10 @@ class GrafanaIRMAlert:
 
     def _create_irm_incident(self, payload: Dict[str, Any]) -> bool:
         try:
-            url = f"{self.host}/api/plugins/grafana-irm-app/resources/api/v1/IncidentsService.CreateIncident"
+            # Construct the full URL for creating incidents
+            incident_url = f"{self.url}/api/plugins/grafana-irm-app/resources/api/v1/IncidentsService.CreateIncident"
             headers = self._get_auth_headers()
-            response = requests.post(url, json=payload, headers=headers, timeout=10)
+            response = requests.post(incident_url, json=payload, headers=headers, timeout=10)
             if response.status_code in [200, 201]:
                 incident_id = response.json().get('id', 'unknown')
                 self.logger.info(f"Incident created in Grafana IRM successfully with ID: {incident_id}")

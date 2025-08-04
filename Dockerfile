@@ -4,13 +4,6 @@ FROM nvidia/cuda:12.8.1-cudnn-runtime-ubuntu24.04
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 
-# Grafana configuration (can be overridden at runtime)
-ENV GRAFANA_HOST=""
-ENV GRAFANA_USERNAME=""
-ENV GRAFANA_PASSWORD=""
-ENV GRAFANA_ORG_ID="1"
-ENV VIDEO_CLIP_BASE_URL="https://sbnb-to-be-filled-by-o-vm-gentle-smart-finch.tail334b4d.ts.net:8971/explore"
-
 # Install system dependencies and Python
 RUN apt-get update && apt-get install -y \
     python3 \
