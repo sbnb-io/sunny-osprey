@@ -252,9 +252,9 @@ To evaluate processing performance, we profiled **Gemma 3n** using **PyTorch Pro
 Profiling details fall outside the scope of this work, so we have published the raw results and code in a separate [gemma3n-profiling](https://github.com/sbnb-io/gemma3n-profiling.git) repository.
 
 ### High-Level Monitoring
-For high-level monitoring, we connect the system to Grafana Cloud via the [nvidia-gpu-exporter](https://github.com/utkuozdemir/nvidia_gpu_exporter) and Grafana Alloy agent, both installed automatically by Sbnb Linux. Here is a snapshot of GPU utilization over two days:
+For high-level monitoring, we connect the system to Grafana Cloud via the [nvidia-gpu-exporter](https://github.com/utkuozdemir/nvidia_gpu_exporter) and Grafana Alloy agent, both installed automatically by Sbnb Linux. Here is a snapshot of GPU utilization over 24 hours:
 
-![](media/gpu-utilization-2days.png)
+![](media/nvidia-utilization-24h.jpg)
 
 GPU usage ranges from 25% to 60%, following the natural day-night rhythm-lower at night when there's less activity, and peaking during the day as more events occur on camera.
 Most of the GPU load comes from YOLO-NAS prefiltering and the MPEG hardware decoder. In contrast, Gemma 3n contributes episodically, only when events are triggered.
