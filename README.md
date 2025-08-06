@@ -257,7 +257,7 @@ For high-level monitoring, we connect the system to Grafana Cloud via the [nvidi
 ![](media/nvidia-utilization-24h.jpg)
 
 GPU usage ranges from 25% to 60%, following the natural day-night rhythm-lower at night when there's less activity, and peaking during the day as more events occur on camera.
-Most of the GPU load comes from YOLO-NAS prefiltering and the MPEG hardware decoder. In contrast, Gemma 3n contributes episodically, only when events are triggered.
+Most of the GPU load comes from YOLO-NAS prefiltering and the MPEG hardware decoder. In contrast, Gemma 3n contributes episodically (spikes), only when events are triggered.
 
 ### GPU Memory
 
